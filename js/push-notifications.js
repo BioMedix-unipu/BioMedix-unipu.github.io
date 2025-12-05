@@ -145,12 +145,12 @@ class PushNotificationManager {
 
     showBrowserNotification(payload) {
         if ('Notification' in window && Notification.permission === 'granted') {
-            const title = payload.notification?.title || 'PulaTechConf';
+            const title = payload.notification?.title || 'BioMedix';
             const options = {
                 body: payload.notification?.body || '',
                 icon: '/icons/ikona(svitla).png',
                 badge: '/favicon.ico',
-                tag: 'pulatech-notification',
+                tag: 'biomedix-notification',
                 requireInteraction: true
             };
 

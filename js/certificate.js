@@ -306,7 +306,7 @@ async function generateCertificate(userData) {
         // Return the PDF bytes for download
         return {
             bytes: pdfBytes,
-            filename: `PulaTechConf2025_Certificate_${userData.lastName}_${userData.firstName}.pdf`
+            filename: `BioMedix2025_Certificate_${userData.lastName}_${userData.firstName}.pdf`
         };
         
     } catch (error) {

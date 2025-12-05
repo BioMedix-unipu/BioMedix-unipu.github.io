@@ -821,7 +821,7 @@ function addSingleEventToCalendar(title, timeText, date, location) {
             start: startDateTime,
             end: endDateTime,
             location: location,
-            description: `PulaTech Conference 2025 event. Location: ${location}`
+            description: `BioMedix TPM 2025 event. Location: ${location}`
         };
         
         const googleCalendarUrl = createGoogleCalendarUrl(event);

@@ -1,0 +1,35 @@
+// Firestore Security Rules for BioMedix
+// Copy these rules to your Firebase Console -> Firestore Database -> Rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - allow read/write for authenticated users on their own documents
+    match /users/{userId} {
+      // Allow anyone to create a user document (for registration)
+      allow create: if true;
+      
+      // Allow users to read and update their own profile
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow admins to read and update any user document
+      allow read, update: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Allow users to read their own data and admins to read all
+      allow read: if request.auth != null && (
+        request.auth.uid == userId || 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+    
+    // Allow admins to list all users
+    match /users/{document=**} {
+      allow list: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+  }
+}

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pulatech-conf-v3';
+const CACHE_NAME = 'biomedix-v1';
 const urlsToCache = [
   '/app/home.html',
   '/app/profile.html',
@@ -113,11 +113,11 @@ self.addEventListener('push', function(event) {
   console.log('Push message received:', event);
   
   let notificationData = {
-    title: 'PulaTech Conference',
+    title: 'BioMedix TPM',
     body: 'New notification',
     icon: '/icons/ikona(svitla).png',
     badge: '/favicon.ico',
-    tag: 'pulatech-notification',
+    tag: 'biomedix-notification',
     requireInteraction: false,
     actions: [
       {
