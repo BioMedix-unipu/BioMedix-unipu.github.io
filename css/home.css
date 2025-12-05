@@ -2727,3 +2727,22 @@ body.admin-mode .editable-section:hover {
         min-height: 180px;
     }
 }
+
+/* PARTNERS SECTION */
+
+.partners-section {
+    background-color: #f8f9fa;
+    padding: 3rem 0;
+    margin-top: 3rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.partners-section .container {
+    max-width: 1000px;
+}
+
+.partners-logo {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+}
