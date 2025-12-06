@@ -101,9 +101,10 @@ function renderDesktopTable(data) {
     }
     
     tbody.innerHTML = data.map(user => `
-        <tr>
+        <tr class="${user.approved === false ? 'user-pending' : ''}">
             <td class="text-center">
-                <span class="badge ${user.approved === true ? 'bg-success' : 'bg-warning'}">
+                <span class="${user.approved === true ? 'badge-approved' : 'badge-pending'}">
+                    <i class="bi ${user.approved === true ? 'bi-check-circle' : 'bi-clock'}"></i>
                     ${user.approved === true ? 'Approved' : 'Pending'}
                 </span>
             </td>
@@ -127,13 +128,13 @@ function renderDesktopTable(data) {
             </td>
             <td><span class="badge ${getRoleBadgeClass(user.role)}">${user.role || 'general'}</span></td>
             <td>
-                <button class="btn btn-sm btn-outline-primary change-role-btn" 
+                <button class="change-role-btn" 
                         data-id="${user.id}" data-name="${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}" 
                         data-current-role="${user.role || 'general'}">
                     <i class="bi bi-person-gear"></i><span class="btn-text ms-1">Role</span>
                 </button>
                 ${user.approved === false ? `
-                <button class="btn btn-sm btn-success ms-1 approve-user-btn" 
+                <button class="btn-approve approve-user-btn" 
                         data-id="${user.id}" data-name="${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}">
                     <i class="bi bi-check-lg"></i><span class="btn-text ms-1">Approve</span>
                 </button>
@@ -155,36 +156,37 @@ function renderMobileCards(data) {
     }
     
     container.innerHTML = data.map(user => `
-        <div class="mobile-user-card" data-user-id="${user.id}">
+        <div class="mobile-user-card ${user.approved === false ? 'pending' : ''}" data-user-id="${user.id}">
             <div class="card-header-row" onclick="toggleUserCard('${user.id}')">
                 <button class="expand-btn" id="expandBtn-${user.id}" type="button">
                     <i class="bi bi-chevron-down"></i>
                 </button>
+                <div class="status-indicator ${user.approved === true ? 'approved' : 'pending'}"></div>
                 <div class="card-preview">
                     <div class="name">${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}</div>
                     <div class="subtitle">${escapeHtml(user.email)}</div>
                 </div>
-                <div class="card-badge">
-                    <span class="badge ${user.approved === true ? 'bg-success' : 'bg-warning'}">
-                        ${user.approved === true ? 'Approved' : 'Pending'}
-                    </span>
+                <span class="${user.approved === true ? 'badge-approved' : 'badge-pending'}">
+                    <i class="bi ${user.approved === true ? 'bi-check-circle' : 'bi-clock'}"></i>
+                    ${user.approved === true ? 'Approved' : 'Pending'}
+                </span>
+            </div>
+            ${user.approved === false ? `
+            <div class="mobile-approve-section">
+                <div class="approve-message">
+                    <i class="bi bi-exclamation-circle"></i>
+                    This user is waiting for approval
+                </div>
+                <div class="mobile-approve-buttons">
+                    <button class="btn-approve approve-user-btn" 
+                            data-id="${user.id}" data-name="${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}">
+                        <i class="bi bi-check-lg"></i>
+                        <span class="btn-text">Approve User</span>
+                    </button>
                 </div>
             </div>
+            ` : ''}
             <div class="card-details" id="details-${user.id}">
-                <div class="detail-row">
-                    <span class="detail-label">Status</span>
-                    <span class="detail-value">
-                        <span class="badge ${user.approved === true ? 'bg-success' : 'bg-warning'}">
-                            ${user.approved === true ? 'Approved' : 'Pending Approval'}
-                        </span>
-                        ${user.approved === false ? `
-                        <button class="btn btn-sm btn-success ms-2 approve-user-btn" 
-                                data-id="${user.id}" data-name="${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}">
-                            <i class="bi bi-check-lg"></i> Approve
-                        </button>
-                        ` : ''}
-                    </span>
-                </div>
                 <div class="detail-row">
                     <span class="detail-label">Email</span>
                     <span class="detail-value">${escapeHtml(user.email)}</span>
@@ -204,12 +206,15 @@ function renderMobileCards(data) {
                     <span class="detail-label">Role</span>
                     <span class="detail-value">
                         <span class="badge ${getRoleBadgeClass(user.role)}">${user.role || 'general'}</span>
-                        <button class="btn btn-sm btn-outline-primary ms-2 change-role-btn" 
-                                data-id="${user.id}" data-name="${escapeHtml(user.firstName)}" 
-                                data-current-role="${user.role || 'general'}">
-                            <i class="bi bi-person-gear"></i> Change
-                        </button>
                     </span>
+                </div>
+                <div class="card-actions">
+                    <button class="change-role-btn" 
+                            data-id="${user.id}" data-name="${escapeHtml(user.firstName)} ${escapeHtml(user.lastName)}" 
+                            data-current-role="${user.role || 'general'}">
+                        <i class="bi bi-person-gear"></i>
+                        <span class="btn-text">Change Role</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -273,16 +278,49 @@ async function approveUser(userId, userName) {
         return;
     }
     
+    // Find and disable all approve buttons for this user
+    const approveButtons = document.querySelectorAll(`.approve-user-btn[data-id="${userId}"]`);
+    approveButtons.forEach(btn => {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    });
+    
     try {
         await updateDoc(doc(db, "users", userId), { approved: true });
         const user = allUsers.find(u => u.id === userId);
         if (user) user.approved = true;
+        
+        // Show success toast
+        showApproveToast(`${userName} has been approved!`);
+        
         applyFilters(); // Refresh the display
-        alert(`User ${userName} has been approved successfully!`);
     } catch (error) {
         console.error("Error:", error);
         alert("Error approving user");
+        
+        // Re-enable buttons on error
+        approveButtons.forEach(btn => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-lg"></i><span class="btn-text ms-1">Approve</span>';
+        });
     }
+}
+
+// Toast notification for approve success
+function showApproveToast(message) {
+    // Remove existing toast if any
+    document.querySelector('.approve-success-toast')?.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = 'approve-success-toast';
+    toast.innerHTML = `<i class="bi bi-check-circle"></i> ${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 
 async function updateUserField(userId, field, value) {
@@ -346,6 +384,7 @@ function addMobileEventListeners() {
         });
     });
     
+    // Approve buttons - both in mobile-approve-section and card-details
     document.querySelectorAll('#mobileUserCards .approve-user-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();

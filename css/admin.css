@@ -217,7 +217,451 @@ h4 { font-size: 1.25rem; font-weight: 600; color: #2c3e50; }
     .btn-sm { font-size: 0.75rem; padding: 0.25rem 0.5rem; }
 }
 
+/* ===================================
+   APPROVE BUTTON & PENDING USERS
+   =================================== */
+
+/* Pending user row highlight */
+.user-pending {
+    background-color: rgba(255, 193, 7, 0.08) !important;
+    border-left: 3px solid #ffc107;
+}
+
+.user-pending:hover {
+    background-color: rgba(255, 193, 7, 0.12) !important;
+}
+
+/* ===========================================
+   UNIFIED BUTTON SIZING - Role & Approve
+   Both buttons MUST be same size
+   =========================================== */
+
+/* Base button style for both */
+.change-role-btn,
+.btn-role,
+.btn-approve {
+    font-weight: 600;
+    padding: 0.4rem 0.85rem;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    height: 32px;
+    line-height: 1;
+    box-sizing: border-box;
+}
+
+/* Role Button styling */
+.change-role-btn,
+.btn-role {
+    background-color: #fff;
+    border: 1.5px solid #356FBE;
+    color: #356FBE;
+}
+
+.change-role-btn:hover,
+.btn-role:hover {
+    background-color: #356FBE;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Approve Button styling */
+.btn-approve {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    color: white;
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.25);
+}
+
+.btn-approve:hover {
+    background: linear-gradient(135deg, #218838 0%, #1aa87c 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(40, 167, 69, 0.35);
+    color: white;
+}
+
+.btn-approve:active {
+    transform: translateY(0);
+}
+
+/* Icon sizing - same for both */
+.change-role-btn i,
+.btn-role i,
+.btn-approve i {
+    font-size: 0.85rem;
+}
+
+/* ===========================================
+   FORCE HORIZONTAL LAYOUT IN TABLE
+   =========================================== */
+
+/* Make last table cell a flex container */
+.user-table td:last-child,
+.table td:last-child,
+td.actions-cell,
+.table-responsive td:last-child {
+    white-space: nowrap;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+}
+
+/* Action buttons wrapper */
+.action-buttons {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+}
+
+/* Ensure buttons don't wrap or stack */
+.action-buttons > *,
+td:last-child > .btn,
+td:last-child > .btn-approve,
+td:last-child > .change-role-btn,
+td:last-child > button {
+    flex-shrink: 0 !important;
+    display: inline-flex !important;
+    vertical-align: middle !important;
+}
+
+/* Remove any margin that might cause wrapping */
+td:last-child .btn,
+td:last-child .btn-approve,
+td:last-child .change-role-btn {
+    margin: 0 !important;
+}
+
+/* Pending Badge - Enhanced */
+.badge-pending,
+.badge.bg-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%) !important;
+    color: #856404 !important;
+    font-weight: 600;
+    padding: 0.35rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.badge-pending i {
+    font-size: 0.65rem;
+}
+
+/* Approved Badge */
+.badge-approved,
+.badge.bg-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: white !important;
+    font-weight: 600;
+    padding: 0.35rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+/* Mobile Card - Pending State */
+.mobile-user-card.pending {
+    border-left: 4px solid #ffc107;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.05) 0%, rgba(255, 255, 255, 1) 100%);
+}
+
+.mobile-user-card.pending .card-header-row {
+    background-color: rgba(255, 193, 7, 0.08);
+}
+
+/* Mobile Approve Section */
+.mobile-approve-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #fff3cd 100%);
+    border-top: 1px dashed #ffc107;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mobile-approve-section .approve-message {
+    font-size: 0.85rem;
+    color: #856404;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mobile-approve-section .approve-message i {
+    font-size: 1.1rem;
+}
+
+.mobile-approve-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.mobile-approve-buttons .btn-approve {
+    flex: 1;
+    justify-content: center;
+    padding: 0.625rem 1rem;
+}
+
+.mobile-approve-buttons .btn-reject {
+    flex: 0 0 auto;
+    padding: 0.625rem 0.875rem;
+}
+
+/* Desktop Table - Actions Column - FORCE HORIZONTAL */
+.user-table td:last-child,
+.table td:last-child,
+.table-responsive td:last-child {
+    white-space: nowrap !important;
+}
+
+/* Force all direct children of Actions cell to be inline */
+.user-table td:last-child,
+.table td:last-child {
+    display: table-cell;
+}
+
+.user-table td:last-child > *,
+.table td:last-child > *,
+.user-table td:last-child .btn,
+.table td:last-child .btn,
+.user-table td:last-child .btn-approve,
+.table td:last-child .btn-approve,
+.user-table td:last-child .change-role-btn,
+.table td:last-child .change-role-btn {
+    display: inline-flex !important;
+    vertical-align: middle;
+    margin-right: 6px;
+    margin-bottom: 0 !important;
+}
+
+.user-table td:last-child > *:last-child,
+.table td:last-child > *:last-child {
+    margin-right: 0;
+}
+
+/* If buttons are wrapped in a div, make it inline-flex */
+.user-table td:last-child > div,
+.table td:last-child > div {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    gap: 6px;
+    flex-wrap: nowrap !important;
+    align-items: center;
+}
+
+.user-table .actions-cell .action-buttons {
+    justify-content: flex-start;
+}
+
+/* Quick Approve Toast/Notification */
+.approve-success-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 9999;
+    animation: slideInUp 0.3s ease;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Pending Users Counter Badge */
+.pending-count-badge {
+    background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);
+    color: #856404;
+    font-weight: 700;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    margin-left: 8px;
+    animation: pulse-pending 2s infinite;
+}
+
+/* Filter highlight when pending selected */
+#userApprovalFilter option[value="pending"] {
+    background-color: #fff3cd;
+    font-weight: 600;
+}
+
+/* ===================================
+   RESPONSIVE ADJUSTMENTS FOR APPROVE
+   =================================== */
+
+/* Desktop - full buttons with text */
+@media (min-width: 1200px) {
+    .btn-approve,
+    .change-role-btn,
+    .btn-role {
+        padding: 0.4rem 0.85rem;
+        height: 32px;
+    }
+    
+    .action-buttons {
+        gap: 8px;
+    }
+}
+
+/* Medium desktop - slightly smaller, keep text */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    .btn-approve,
+    .change-role-btn,
+    .btn-role {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.78rem;
+        height: 30px;
+    }
+    
+    .action-buttons {
+        gap: 6px;
+    }
+}
+
+/* Tablet - Mobile cards take over, but keep button sizing consistent */
+@media (max-width: 991.98px) {
+    .mobile-approve-section {
+        padding: 14px;
+    }
+    
+    /* Mobile buttons - same style as desktop */
+    .mobile-approve-buttons .btn-approve,
+    .mobile-approve-buttons .change-role-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        height: 36px;
+    }
+    
+    .mobile-approve-buttons .btn-approve .btn-text {
+        display: inline;
+    }
+    
+    /* Card actions buttons */
+    .card-actions .btn-approve,
+    .card-actions .change-role-btn,
+    .card-actions .btn-role {
+        padding: 0.4rem 0.85rem;
+        font-size: 0.8rem;
+        height: 32px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .mobile-approve-section {
+        padding: 12px;
+    }
+    
+    .mobile-approve-buttons {
+        flex-direction: row;
+        gap: 8px;
+    }
+    
+    .mobile-approve-buttons .btn-approve {
+        flex: 1;
+        height: 38px;
+    }
+    
+    .mobile-approve-buttons .btn-reject {
+        flex: 0 0 auto;
+        height: 38px;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    /* Card actions - horizontal layout */
+    .card-actions {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .card-actions .btn-approve,
+    .card-actions .change-role-btn {
+        flex: 1;
+        min-width: 100px;
+        height: 36px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .mobile-approve-buttons .btn-approve,
+    .mobile-approve-buttons .btn-reject {
+        height: 36px;
+        font-size: 0.85rem;
+    }
+    
+    .card-actions .btn-approve,
+    .card-actions .change-role-btn {
+        height: 34px;
+        font-size: 0.8rem;
+        padding: 0.35rem 0.75rem;
+    }
+}
+
+@media (max-width: 379.98px) {
+    .mobile-approve-section {
+        padding: 10px;
+    }
+    
+    .mobile-approve-section .approve-message {
+        font-size: 0.8rem;
+    }
+    
+    .mobile-approve-buttons .btn-approve,
+    .mobile-approve-buttons .btn-reject {
+        height: 34px;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.65rem;
+    }
+    
+    .card-actions .btn-approve,
+    .card-actions .change-role-btn {
+        height: 32px;
+        font-size: 0.78rem;
+    }
+    
+    .badge-pending, .badge-approved {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+    }
+}
+
 /* UTILITY */
 html { scroll-behavior: smooth; }
 .btn:focus-visible, .form-control:focus-visible, .form-select:focus-visible { outline: 2px solid #356FBE; outline-offset: 2px; }
 .spinner-border-sm { width: 1rem; height: 1rem; }
+
+/* Pagination select fix - prevent arrow overlap */
+#userPerPageSelect,
+.pagination-container .form-select-sm {
+    min-width: 75px;
+    padding-right: 2.25rem;
+    background-position: right 0.5rem center;
+}
