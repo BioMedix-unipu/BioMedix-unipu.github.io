@@ -84,14 +84,27 @@ function loadScripts(urls) {
     return Promise.all(promises);
 }
 
-// Function to test if the Italianno font is actually loaded
-function checkFontLoaded() {
-    // Create an element with the font
+// Function to test if the Italianno font is actually loaded using Font Loading API
+async function checkFontLoaded() {
+    try {
+        // Use the Font Loading API - much more reliable
+        if ('fonts' in document) {
+            await document.fonts.load('400 12px Italianno');
+            const fontLoaded = document.fonts.check('400 12px Italianno');
+            console.log(`Font Loading API test: ${fontLoaded ? 'Italianno loaded' : 'Italianno NOT loaded'}`);
+            return fontLoaded;
+        }
+    } catch (error) {
+        console.warn("Font Loading API check failed:", error);
+    }
+    
+    // Fallback to manual check if Font Loading API is not available
     const fontTest = document.createElement('span');
     fontTest.style.fontFamily = "'Italianno', cursive";
-    fontTest.style.fontSize = "50px"; // Use a smaller size for more reliable testing
+    fontTest.style.fontSize = "50px";
     fontTest.style.visibility = "hidden";
-    fontTest.textContent = "Test Font Loading"; // Use a longer text for better comparison
+    fontTest.style.position = "absolute";
+    fontTest.textContent = "Test Font Loading";
     document.body.appendChild(fontTest);
     
     // Force a reflow
@@ -108,61 +121,50 @@ function checkFontLoaded() {
     
     // If widths are different, custom font was loaded
     const fontLoaded = initialWidth !== afterWidth;
-    console.log(`Font test: ${fontLoaded ? 'Italianno loaded' : 'Italianno NOT loaded'}`);
-    console.log(`Width comparison: initial=${initialWidth}, after=${afterWidth}, difference=${Math.abs(initialWidth - afterWidth)}`);
+    console.log(`Manual font test: ${fontLoaded ? 'Italianno loaded' : 'Italianno NOT loaded'}`);
     
     return fontLoaded;
 }
 
-// Enhanced preloading function that handles fonts with better timeout handling
-function preloadResources() {
-    return new Promise((resolve) => {
-        console.log("Preloading fonts and resources...");
-        const startTime = Date.now();
-        
-        // Load Italianno font
-        const fontLoader = document.createElement('link');
-        fontLoader.rel = 'stylesheet';
-        fontLoader.href = 'https://fonts.googleapis.com/css2?family=Italianno&display=swap';
-        document.head.appendChild(fontLoader);
-        
-        // Use more robust font loading detection
-        let fontLoaded = false;
-        let attempts = 0;
-        
-        // Create a function to check if font is loaded
-        const checkFontInterval = setInterval(() => {
-            attempts++;
-            const elapsedTime = Date.now() - startTime;
-            const isLoaded = checkFontLoaded();
+// Enhanced preloading function using Font Loading API
+// Note: Font is already loaded via CSS @import, we just check if it's ready
+async function preloadResources() {
+    console.log("Checking if Italianno font is ready...");
+    const startTime = Date.now();
+    
+    try {
+        // Check if Font Loading API is available
+        if ('fonts' in document) {
+            console.log("Using Font Loading API for Italianno");
             
-            console.log(`Font load check attempt #${attempts} after ${elapsedTime}ms: ${isLoaded ? 'SUCCESS' : 'WAITING'}`);
+            // Font is already being loaded via CSS, just ensure it's ready
+            // Wait for the font with a short timeout
+            const fontPromise = document.fonts.load('400 400px Italianno');
+            const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(false), 2000));
+            
+            await Promise.race([fontPromise, timeoutPromise]);
+            
+            // Check if font is loaded
+            const isLoaded = document.fonts.check('400 400px Italianno');
+            const elapsedTime = Date.now() - startTime;
             
             if (isLoaded) {
-                fontLoaded = true;
-                console.log(`Italianno font loaded successfully after ${elapsedTime}ms`);
-                clearInterval(checkFontInterval);
-                clearTimeout(timeoutHandler);
-                resolve(true);
-            }
-            // Continue checking in the interval
-        }, 500); // Check every 500ms
-        
-        // Fallback after exactly 1 minute (60000ms)
-        const timeoutHandler = setTimeout(() => {
-            clearInterval(checkFontInterval);
-            const elapsedTime = Date.now() - startTime;
-            console.warn(`Font loading timeout reached after ${elapsedTime}ms, continuing with fallbacks`);
-            
-            // Check one last time
-            if (!fontLoaded && checkFontLoaded()) {
-                console.log("Font loaded just in time during final check");
-                resolve(true);
+                console.log(`✓ Italianno font ready after ${elapsedTime}ms`);
+                return true;
             } else {
-                resolve(false);
+                console.warn(`⚠ Font not ready after ${elapsedTime}ms, using fallback`);
+                return false;
             }
-        }, 60000);
-    });
+        } else {
+            // Fallback for browsers without Font Loading API
+            console.log("Font Loading API not available, using manual check");
+            return await checkFontLoaded();
+        }
+    } catch (error) {
+        const elapsedTime = Date.now() - startTime;
+        console.error(`Font loading error after ${elapsedTime}ms:`, error);
+        return false;
+    }
 }
 
 // Enhanced certificate generation using JPG image directly
@@ -200,7 +202,7 @@ async function generateCertificate(userData) {
             throw new Error("PDF libraries didn't load correctly");
         }
         
-        // Preload fonts before generating certificate
+        // Preload fonts before generating certificate (now with 3 second timeout)
         const fontLoadResult = await preloadResources();
         console.log(`Font preloading complete, success: ${fontLoadResult}`);
         
@@ -224,7 +226,7 @@ async function generateCertificate(userData) {
         // Draw the certificate image on the canvas
         ctx.drawImage(img, 0, 0);
         
-        // Add the name text - use information from font loading result
+        // Add the name text - use better fallback fonts
         let fontFamily, baseFontSize;
         
         if (fontLoadResult) {
@@ -232,35 +234,108 @@ async function generateCertificate(userData) {
             baseFontSize = 400;
             console.log("Using Italianno font for certificate");
         } else {
-            // Fallback font options
-            fontFamily = "serif";
+            // Better fallback fonts that look more elegant
+            fontFamily = "'Georgia', 'Times New Roman', serif";
             baseFontSize = 120;
-            console.log("Using fallback font for certificate");
+            console.log("Using fallback font for certificate (Georgia/Times New Roman)");
         }
         
-        // Position the text in the center-ish of the certificate
+        // Smart text sizing and positioning
         const text = `${userData.firstName} ${userData.lastName}`;
         
-        // Simple font size adjustment based on name length
-        const nameLength = text.length;
-        let fontSize = baseFontSize;
+        console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+        console.log(`📝 CERTIFICATE TEXT SIZING`);
+        console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+        console.log(`Name: "${text}" (${text.length} characters)`);
+        console.log(`Canvas: ${canvas.width}x${canvas.height}px`);
         
-        // Adjust font size if name is too long
-        if (nameLength > 15) {
-            const reductionFactor = Math.min(1.0, 15 / nameLength);
-            fontSize = Math.floor(baseFontSize * reductionFactor);
-            console.log(`Adjusted font size to ${fontSize}px due to long name (${nameLength} characters)`);
+        // Define the area where text should fit (certificate has decorative borders)
+        const maxTextWidth = canvas.width * 0.7; // 70% of canvas width for safety
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        
+        console.log(`Max text width: ${maxTextWidth}px (70% of canvas)`);
+        console.log(`Starting font size: ${baseFontSize}px`);
+        
+        // Start with base font size and dynamically adjust
+        let fontSize = baseFontSize;
+        let textWidth;
+        let attempts = 0;
+        const maxAttempts = 50; // Prevent infinite loops
+        
+        // Function to measure text width
+        const measureText = (size) => {
+            ctx.font = `${size}px ${fontFamily}`;
+            return ctx.measureText(text).width;
+        };
+        
+        // Dynamically reduce font size until text fits
+        textWidth = measureText(fontSize);
+        console.log(`Initial text width: ${textWidth}px`);
+        
+        while (textWidth > maxTextWidth && attempts < maxAttempts) {
+            fontSize = Math.floor(fontSize * 0.95); // Reduce by 5% each iteration
+            textWidth = measureText(fontSize);
+            attempts++;
         }
         
-        ctx.font = `${fontSize}px ${fontFamily}`;
-        ctx.fillStyle = "#333333";
-        ctx.textAlign = "center";
+        if (attempts > 0) {
+            console.log(`✓ Adjusted font size in ${attempts} iterations`);
+        }
         
-        console.log(`Using font: ${fontFamily} at size ${fontSize}px`);
-        
-        // Add margin from top/bottom (20% of canvas height)
-        const maxWidth = canvas.width * 0.8; // 80% of canvas width as max width
-        ctx.fillText(text, canvas.width / 2, canvas.height / 2, maxWidth);
+        // Ensure minimum readable size
+        const minFontSize = fontLoadResult ? 80 : 40; // Different minimums for different fonts
+        if (fontSize < minFontSize) {
+            fontSize = minFontSize;
+            console.warn(`⚠ Font size limited to minimum: ${fontSize}px`);
+            
+            // For very long names, consider wrapping text
+            const words = text.split(' ');
+            if (words.length > 1 && measureText(fontSize) > maxTextWidth) {
+                // Draw name in two lines if needed
+                ctx.font = `${fontSize}px ${fontFamily}`;
+                ctx.fillStyle = "#333333";
+                ctx.textAlign = "center";
+                
+                const firstName = words.slice(0, -1).join(' '); // All except last
+                const lastName = words[words.length - 1]; // Last word
+                
+                const lineHeight = fontSize * 1.2;
+                const firstNameWidth = ctx.measureText(firstName).width;
+                const lastNameWidth = ctx.measureText(lastName).width;
+                
+                // Center both lines
+                ctx.fillText(firstName, centerX, centerY - lineHeight / 2, maxTextWidth);
+                ctx.fillText(lastName, centerX, centerY + lineHeight / 2, maxTextWidth);
+                
+                console.log(`📋 TEXT WRAPPED TO 2 LINES:`);
+                console.log(`  Line 1: "${firstName}" (${Math.round(firstNameWidth)}px)`);
+                console.log(`  Line 2: "${lastName}" (${Math.round(lastNameWidth)}px)`);
+                console.log(`  Font: ${fontSize}px ${fontFamily}`);
+                console.log(`  Line height: ${lineHeight}px`);
+            } else {
+                // Single line with minimum font
+                ctx.font = `${fontSize}px ${fontFamily}`;
+                ctx.fillStyle = "#333333";
+                ctx.textAlign = "center";
+                ctx.fillText(text, centerX, centerY, maxTextWidth);
+                console.log(`📏 SINGLE LINE (minimum font):`);
+                console.log(`  Font: ${fontSize}px ${fontFamily}`);
+                console.log(`  Width: ${Math.round(textWidth)}px / ${maxTextWidth}px`);
+            }
+        } else {
+            // Normal single-line rendering
+            ctx.font = `${fontSize}px ${fontFamily}`;
+            ctx.fillStyle = "#333333";
+            ctx.textAlign = "center";
+            ctx.fillText(text, centerX, centerY, maxTextWidth);
+            
+            const fitPercentage = Math.round(textWidth/maxTextWidth*100);
+            console.log(`✓ PERFECT FIT:`);
+            console.log(`  Font: ${fontSize}px ${fontFamily}`);
+            console.log(`  Width: ${Math.round(textWidth)}px / ${maxTextWidth}px (${fitPercentage}%)`);
+        }
+        console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
         
         // Get the image data from canvas
         const imageData = canvas.toDataURL('image/jpeg', 0.95);
